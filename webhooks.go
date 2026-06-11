@@ -159,3 +159,22 @@ func (e *Event) RefundObject() (*RefundEventObject, error) {
 	}
 	return &obj, nil
 }
+
+// VerifyWebhook verifies the Zoho webhook signature using the signing key
+// configured on the client (WithSigningKey option or ZOHO_SIGNING_KEY env var).
+// Returns an error if the key is not configured, the signature is invalid,
+// or the event is older than 5 minutes.
+func (c *Client) VerifyWebhook(body []byte, sigHeader string) error {
+	return c.VerifyWebhookWithTolerance(body, sigHeader, 5*time.Minute)
+}
+
+// VerifyWebhookWithTolerance is like VerifyWebhook with a configurable replay window.
+func (c *Client) VerifyWebhookWithTolerance(body []byte, sigHeader string, tolerance time.Duration) error {
+	if c.signingKey == "" {
+		return fmt.Errorf("zoho: signing key not configured — use WithSigningKey or set ZOHO_SIGNING_KEY")
+	}
+	if !VerifySignatureWithTolerance(body, sigHeader, c.signingKey, tolerance) {
+		return fmt.Errorf("zoho: webhook signature invalid")
+	}
+	return nil
+}

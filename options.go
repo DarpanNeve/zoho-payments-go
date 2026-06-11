@@ -3,6 +3,7 @@ package zoho
 import (
 	"errors"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -29,6 +30,7 @@ type config struct {
 	tokenOverride string
 	httpClient    *http.Client
 	maxRetries    int
+	signingKey    string
 }
 
 func defaultConfig() config {
@@ -92,4 +94,17 @@ func WithMaxRetries(n int) Option {
 			c.maxRetries = n
 		}
 	}
+}
+
+// WithSigningKey sets the webhook signing key used by client.VerifyWebhook.
+// If not provided, the client reads ZOHO_SIGNING_KEY from the environment.
+func WithSigningKey(key string) Option {
+	return func(c *config) { c.signingKey = key }
+}
+
+func resolveSigningKey(cfg config) string {
+	if cfg.signingKey != "" {
+		return cfg.signingKey
+	}
+	return os.Getenv("ZOHO_SIGNING_KEY")
 }

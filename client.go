@@ -29,6 +29,7 @@ type Client struct {
 	tokenURL     string
 	httpClient   *http.Client
 	maxRetries   int
+	signingKey   string
 
 	mu          sync.Mutex
 	accessToken string
@@ -58,6 +59,7 @@ func New(accountID, clientID, clientSecret, refreshToken string, opts ...Option)
 		tokenURL:     tokenURL,
 		httpClient:   cfg.httpClient,
 		maxRetries:   cfg.maxRetries,
+		signingKey:   resolveSigningKey(cfg),
 	}, nil
 }
 
