@@ -258,7 +258,7 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    signingKey := os.Getenv("ZOHO_SIGNING_KEY")
+    signingKey := os.Getenv("ZOHO_WEBHOOK_SECRET")
     if signingKey == "" {
         http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
         return
@@ -417,7 +417,8 @@ ZOHO_ACCOUNT_ID      — dashboard → Settings → Account Details
 ZOHO_CLIENT_ID       — api-console.zoho.in
 ZOHO_CLIENT_SECRET   — api-console.zoho.in
 ZOHO_REFRESH_TOKEN   — from the one-time OAuth flow above
-ZOHO_SIGNING_KEY     — Developer Space → Authentication Keys (for webhook verification)
+ZOHO_WEBHOOK_SECRET  — Developer Space → Webhooks → your endpoint → Signing Key (preferred name)
+ZOHO_SIGNING_KEY     — accepted as fallback if ZOHO_WEBHOOK_SECRET is not set
 ZOHO_SANDBOX         — set to "true" to use sandbox environment
 ```
 
