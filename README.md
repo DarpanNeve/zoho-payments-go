@@ -1,8 +1,8 @@
 # zoho-payments-go
 
-> **Unofficial SDK** — Not affiliated with or endorsed by Zoho Corporation. "Zoho" and "Zoho Payments" are trademarks of Zoho Corporation Pvt. Ltd.
+> **Unofficial SDK** Not affiliated with or endorsed by Zoho Corporation. "Zoho" and "Zoho Payments" are trademarks of Zoho Corporation Pvt. Ltd.
 
-Go client for the [Zoho Payments](https://www.zoho.com/in/payments/) API (India data center). Covers payment links, payments, refunds, and webhooks. Zero dependencies — standard library only.
+Go client for the [Zoho Payments](https://www.zoho.com/in/payments/) API (India data center). Covers payment links, payments, refunds, and webhooks. Zero dependencies standard library only.
 
 ```
 go get github.com/darpanneve/zoho-payments-go
@@ -14,11 +14,11 @@ go get github.com/darpanneve/zoho-payments-go
 
 You need four values: **Account ID**, **Client ID**, **Client Secret**, and **Refresh Token**.
 
-**Account ID** — Zoho Payments dashboard → Settings → Account Details.
+**Account ID** : Zoho Payments dashboard → Settings → Account Details.
 
-**Client ID + Client Secret** — [api-console.zoho.in](https://api-console.zoho.in) → Create → **Server-based Application**. Do not use "Self Client" — it has no redirect URI and fails for Zoho Payments. Any redirect URI works for the one-time flow (e.g. `https://example.com/callback`).
+**Client ID + Client Secret** : [api-console.zoho.in](https://api-console.zoho.in) → Create → **Server-based Application**. Do not use "Self Client" : it has no redirect URI and fails for Zoho Payments. Any redirect URI works for the one-time flow (e.g. `https://example.com/callback`).
 
-**Refresh Token** — one-time browser flow:
+**Refresh Token** : one-time browser flow:
 
 1. Open this URL while logged into the Zoho Payments account owner:
 
@@ -33,8 +33,8 @@ https://accounts.zoho.in/oauth/v2/auth
 ```
 
 Two things that trip people up:
-- Scope prefix is `ZohoPay.` — not `ZohoPayments.*` (different product, causes 401s)
-- `soid=zohopay.YOUR_ACCOUNT_ID` is required — missing it causes silent auth failures
+- Scope prefix is `ZohoPay.` : not `ZohoPayments.*` (different product, causes 401s)
+- `soid=zohopay.YOUR_ACCOUNT_ID` is required : missing it causes silent auth failures
 
 2. After approving, copy the `code` from the redirect URL. It expires in **60 seconds**.
 
@@ -49,9 +49,9 @@ curl -X POST "https://accounts.zoho.in/oauth/v2/token" \
   -d "code=PASTE_CODE_HERE"
 ```
 
-Save the `refresh_token`. The SDK handles all subsequent token refreshes — you never touch tokens again.
+Save the `refresh_token`. The SDK handles all subsequent token refreshes : you never touch tokens again.
 
-**Sandbox** — email `support@zohopayments.com` with your Account ID to request sandbox access (~1 business day). Sandbox and production use **completely separate** OAuth apps, refresh tokens, signing keys, and account IDs.
+**Sandbox** : email `support@zohopayments.com` with your Account ID to request sandbox access (~1 business day). Sandbox and production use **completely separate** OAuth apps, refresh tokens, signing keys, and account IDs.
 
 ## Client setup
 
@@ -69,7 +69,7 @@ if err != nil {
 }
 ```
 
-`New` fails fast if any credential is empty. Create **one client per process** and share it — it is goroutine-safe and caches the access token internally.
+`New` fails fast if any credential is empty. Create **one client per process** and share it : it is goroutine-safe and caches the access token internally.
 
 ### Options
 
@@ -102,10 +102,10 @@ client, err := zoho.New(accountID, clientID, clientSecret, refreshToken, opts...
 
 ```go
 link, err := client.CreatePaymentLink(ctx, zoho.CreatePaymentLinkRequest{
-    Amount:           4999.00,                           // RUPEES — not paise
+    Amount:           4999.00,                           // RUPEES : not paise
     Currency:         "INR",                             // optional, defaults to INR
-    Description:      zoho.SanitizeText("Kedarkantha Trek — 2 guests"),
-    ReferenceID:      bookingID,                         // your ID — returned in webhooks
+    Description:      zoho.SanitizeText("Kedarkantha Trek : 2 guests"),
+    ReferenceID:      bookingID,                         // your ID : returned in webhooks
     Phone:            zoho.NormalizePhone("919876543210", "IN"), // strips country prefix → "9876543210"
     PhoneCountryCode: "IN",
     Email:            "customer@example.com",            // optional
@@ -116,15 +116,15 @@ if err != nil {
     // nothing was charged
 }
 
-// link.URL           — hosted checkout page to send to customer
-// link.PaymentLinkID — store this for webhook lookup and cancellation
+// link.URL           : hosted checkout page to send to customer
+// link.PaymentLinkID : store this for webhook lookup and cancellation
 ```
 
 Validation runs before any network call: amount must be > 0, description is required (max 500 chars), reference ID max 100 chars.
 
 **Phone numbers from WhatsApp** arrive as `919876543210` (12 digits). Zoho checkout pre-fill needs the bare 10-digit number + `PhoneCountryCode: "IN"`. `zoho.NormalizePhone` handles this.
 
-**Description** — always run user input through `zoho.SanitizeText`. Zoho rejects many special characters and returns an error if unsanitized text slips through.
+**Description** : always run user input through `zoho.SanitizeText`. Zoho rejects many special characters and returns an error if unsanitized text slips through.
 
 ### Get
 
@@ -132,7 +132,7 @@ Validation runs before any network call: amount must be > 0, description is requ
 link, err := client.GetPaymentLink(ctx, linkID)
 
 // link.Status:   "active" | "paid" | "canceled" | "expired"
-// link.IsPaid()  — convenience method
+// link.IsPaid()  : convenience method
 
 fmt.Println(link.Amount.Float64())       // zoho.Amount → float64
 fmt.Println(link.CreatedTime.Time)       // zoho.Time   → time.Time
@@ -151,7 +151,7 @@ link, err := client.UpdatePaymentLink(ctx, linkID, zoho.UpdatePaymentLinkRequest
 
 ```go
 err := client.CancelPaymentLink(ctx, linkID)
-// empty linkID is a no-op — safe to call without checking
+// empty linkID is a no-op : safe to call without checking
 ```
 
 ## Payments
@@ -200,10 +200,10 @@ refund, err := client.CreateRefund(ctx, paymentID, zoho.CreateRefundRequest{
     Amount:      1000.00,                                // partial refunds supported
     Reason:      zoho.RefundReasonRequestedByCustomer,   // or: Duplicate | Fraudulent | Others | SystemInitiated
     Type:        zoho.RefundTypeMerchant,                // or: RefundTypeCustomer | RefundTypeSystem
-    Description: "Trek cancelled — weather",             // optional
+    Description: "Trek cancelled : weather",             // optional
 })
 
-// refund.Status: "initiated" (typical) — refunds are async
+// refund.Status: "initiated" (typical) : refunds are async
 ```
 
 ### Get refund
@@ -218,7 +218,7 @@ Track completion via `refund.succeeded` / `refund.failed` webhooks, or poll `Get
 
 ## Webhooks
 
-Configure the endpoint in Zoho Payments → Developer Space → Webhooks. Copy the **Signing Key** when shown — it's only displayed once.
+Configure the endpoint in Zoho Payments → Developer Space → Webhooks. Copy the **Signing Key** when shown : it's only displayed once.
 
 ### Handler
 
@@ -250,7 +250,7 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
 
     ev, err := zoho.ParseEvent(body)
     if err != nil {
-        w.WriteHeader(http.StatusOK) // authentic but unparseable — ack to stop retries
+        w.WriteHeader(http.StatusOK) // authentic but unparseable : ack to stop retries
         return
     }
 
@@ -271,8 +271,8 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
         pl := obj.PaymentLinks
-        // pl.ReferenceID  — the value you set at CreatePaymentLink
-        // pl.FirstPaymentID() — the payment ID
+        // pl.ReferenceID  : the value you set at CreatePaymentLink
+        // pl.FirstPaymentID() : the payment ID
 
     case zoho.EventPaymentSucceeded:
         obj, err := ev.PaymentObject()
@@ -296,7 +296,7 @@ Header: `X-Zoho-Webhook-Signature: t=<unix-ms>,v=<hmac-sha256-hex>`
 
 Signed string: `<timestamp> + "." + <raw body>`
 
-`VerifySignature` does a constant-time comparison. `VerifySignatureWithTolerance` additionally rejects events older than the given window. Always verify against the **raw** body bytes — re-serializing the JSON breaks the HMAC.
+`VerifySignature` does a constant-time comparison. `VerifySignatureWithTolerance` additionally rejects events older than the given window. Always verify against the **raw** body bytes : re-serializing the JSON breaks the HMAC.
 
 ### Deduplication
 
@@ -324,7 +324,7 @@ if err != nil {
         switch {
         case apiErr.IsRateLimited(): // HTTP 429
             scheduleRetry()
-        case apiErr.IsAuthError():   // 401 or 403 — check scopes, soid, region
+        case apiErr.IsAuthError():   // 401 or 403 : check scopes, soid, region
             alertOps(apiErr)
         case apiErr.IsNotFound():    // 404
             handleGone()
@@ -345,8 +345,8 @@ if err != nil {
 | Situation | What happens |
 |---|---|
 | `401 Unauthorized` | Token cache cleared, fresh token fetched, request retried **once** (any method) |
-| `429` / `5xx` on **GET** | Exponential backoff — 400ms × 2ⁿ — up to `WithMaxRetries` attempts (default 2) |
-| `429` / `5xx` on **POST / PUT** | **Not retried** — Zoho Payments has no idempotency keys; retrying creates could produce duplicate links or double charges |
+| `429` / `5xx` on **GET** | Exponential backoff : 400ms × 2ⁿ : up to `WithMaxRetries` attempts (default 2) |
+| `429` / `5xx` on **POST / PUT** | **Not retried** : Zoho Payments has no idempotency keys; retrying creates could produce duplicate links or double charges |
 
 Token cache: access tokens are refreshed ~60 seconds before expiry. Concurrent goroutines share a single in-flight refresh (no stampede).
 
@@ -372,13 +372,13 @@ link.CreatedTime.Time    // zoho.Time embeds time.Time (Zoho returns timestamps 
 ## Environment variables
 
 ```
-ZOHO_ACCOUNT_ID      — dashboard → Settings → Account Details
-ZOHO_CLIENT_ID       — api-console.zoho.in
-ZOHO_CLIENT_SECRET   — api-console.zoho.in
-ZOHO_REFRESH_TOKEN   — from the one-time OAuth flow above
-ZOHO_WEBHOOK_SECRET  — Developer Space → Webhooks → your endpoint → Signing Key (preferred name)
-ZOHO_SIGNING_KEY     — accepted as fallback if ZOHO_WEBHOOK_SECRET is not set
-ZOHO_SANDBOX         — set to "true" to use sandbox environment
+ZOHO_ACCOUNT_ID      : dashboard → Settings → Account Details
+ZOHO_CLIENT_ID       : api-console.zoho.in
+ZOHO_CLIENT_SECRET   : api-console.zoho.in
+ZOHO_REFRESH_TOKEN   : from the one-time OAuth flow above
+ZOHO_WEBHOOK_SECRET  : Developer Space → Webhooks → your endpoint → Signing Key (preferred name)
+ZOHO_SIGNING_KEY     : accepted as fallback if ZOHO_WEBHOOK_SECRET is not set
+ZOHO_SANDBOX         : set to "true" to use sandbox environment
 ```
 
 Never commit credentials. Use environment variables or a secrets manager.
@@ -390,7 +390,7 @@ go test ./...
 go test -race ./...
 ```
 
-Tests run fully offline using `net/http/httptest` servers — no Zoho credentials required. The suite covers auth header injection, account ID propagation, 401 token retry, 429 backoff, POST non-retry, token caching, real Zoho response shapes (string amounts, epoch timestamps), and webhook signature verification.
+Tests run fully offline using `net/http/httptest` servers : no Zoho credentials required. The suite covers auth header injection, account ID propagation, 401 token retry, 429 backoff, POST non-retry, token caching, real Zoho response shapes (string amounts, epoch timestamps), and webhook signature verification.
 
 To write your own tests against the SDK:
 
@@ -413,16 +413,16 @@ client, _ := zoho.New("acc", "cid", "csecret", "rtoken",
 
 | Mistake | Correct behavior |
 |---|---|
-| Sending amounts in paise | Zoho Payments uses **rupees** (`4999.00`). Razorpay uses paise — easy cross-gateway bug. |
+| Sending amounts in paise | Zoho Payments uses **rupees** (`4999.00`). Razorpay uses paise : easy cross-gateway bug. |
 | `Authorization: Bearer ...` | Zoho uses `Zoho-oauthtoken <token>`. The SDK sets this automatically. |
 | Scope `ZohoPayments.*` | Wrong product. Use `ZohoPay.*` (production) or `ZohoPaySandbox.*` (sandbox). |
 | Missing `soid` in auth URL | Causes silent auth failure. Always include `soid=zohopay.<ACCOUNT_ID>`. |
-| Using "Self Client" OAuth app | Fails — no redirect URI. Register a "Server-based Application". |
+| Using "Self Client" OAuth app | Fails : no redirect URI. Register a "Server-based Application". |
 | Decoding `amount` as `float64` | Zoho returns `"4999.00"` as a string. Use the SDK's `Amount` type. |
 | Decoding `created_time` as `time.Time` | Zoho returns epoch milliseconds. Use the SDK's `Time` type. |
 | Expecting `reference_id` in `payment.succeeded` | Not present. Store `payment_link_id` at creation time and look up by it. |
 | Handling only one webhook event | Both `payment_link.paid` and `payment.succeeded` fire per payment. Make writes idempotent. |
-| Sharing sandbox and production credentials | Fully isolated environments — separate OAuth apps, tokens, signing keys, account IDs. |
+| Sharing sandbox and production credentials | Fully isolated environments : separate OAuth apps, tokens, signing keys, account IDs. |
 | Confirming payment from a screenshot | Always confirm via webhook (verified signature) or `GetPaymentLink` / `GetPayment`. |
 
 ## License
