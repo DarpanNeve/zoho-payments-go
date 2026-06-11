@@ -2,7 +2,7 @@
 
 > **Unofficial SDK** Not affiliated with or endorsed by Zoho Corporation. "Zoho" and "Zoho Payments" are trademarks of Zoho Corporation Pvt. Ltd.
 
-Go client for the [Zoho Payments](https://www.zoho.com/in/payments/) API (India data center). Covers payment links, payments, refunds, and webhooks. Zero dependencies standard library only.
+Go client for the [Zoho Payments](https://syntexco.com/qr/zoho-payments) API. Covers payment links, payments, refunds, and webhooks. Zero dependencies standard library only.
 
 ```
 go get github.com/darpanneve/zoho-payments-go
