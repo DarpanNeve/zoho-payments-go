@@ -25,7 +25,7 @@ func newFixture(t *testing.T, apiHandler http.HandlerFunc) *fixture {
 		if r.FormValue("grant_type") != "refresh_token" {
 			t.Errorf("grant_type = %q", r.FormValue("grant_type"))
 		}
-		json.NewEncoder(w).Encode(map[string]interface{}{"access_token": "tok-1", "expires_in": 3600})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"access_token": "tok-1", "expires_in": 3600})
 	}))
 	t.Cleanup(tokenSrv.Close)
 
@@ -67,11 +67,11 @@ func TestCreatePaymentLinkRealResponseShape(t *testing.T) {
 			t.Errorf("%s %s", r.Method, r.URL.Path)
 		}
 		var req CreatePaymentLinkRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 		if req.Currency != "INR" {
 			t.Errorf("currency = %q", req.Currency)
 		}
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"code": 0,
 			"message": "Payment link created successfully",
 			"payment_links": {
@@ -132,7 +132,7 @@ func TestCancelPaymentLinkUsesPutCancel(t *testing.T) {
 	var gotMethod, gotPath string
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		gotMethod, gotPath = r.Method, r.URL.Path
-		w.Write([]byte(`{"code":0,"payment_links":{"payment_link_id":"pl_100","status":"canceled"}}`))
+		_, _ = w.Write([]byte(`{"code":0,"payment_links":{"payment_link_id":"pl_100","status":"canceled"}}`))
 	})
 
 	if err := f.client.CancelPaymentLink(context.Background(), "pl_100"); err != nil {
@@ -151,10 +151,10 @@ func TestUnauthorizedRetriesOnceWithFreshToken(t *testing.T) {
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		if atomic.AddInt32(&calls, 1) == 1 {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{"code":"error","message":"invalid oauth token"}`))
+			_, _ = w.Write([]byte(`{"code":"error","message":"invalid oauth token"}`))
 			return
 		}
-		w.Write([]byte(`{"code":0,"payment":{"payment_id":"pay_1","status":"succeeded","amount":"10.00"}}`))
+		_, _ = w.Write([]byte(`{"code":0,"payment":{"payment_id":"pay_1","status":"succeeded","amount":"10.00"}}`))
 	})
 
 	p, err := f.client.GetPayment(context.Background(), "pay_1")
@@ -177,10 +177,10 @@ func TestGetRetriesOn429(t *testing.T) {
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		if atomic.AddInt32(&calls, 1) <= 2 {
 			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte(`{"code":"error","message":"rate limited"}`))
+			_, _ = w.Write([]byte(`{"code":"error","message":"rate limited"}`))
 			return
 		}
-		w.Write([]byte(`{"code":0,"payment":{"payment_id":"pay_2","status":"succeeded"}}`))
+		_, _ = w.Write([]byte(`{"code":0,"payment":{"payment_id":"pay_2","status":"succeeded"}}`))
 	})
 
 	p, err := f.client.GetPayment(context.Background(), "pay_2")
@@ -197,7 +197,7 @@ func TestPostDoesNotRetryOn5xx(t *testing.T) {
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&calls, 1)
 		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte(`{"code":"error","message":"upstream"}`))
+		_, _ = w.Write([]byte(`{"code":"error","message":"upstream"}`))
 	})
 
 	_, err := f.client.CreatePaymentLink(context.Background(), CreatePaymentLinkRequest{Amount: 10, Description: "x"})
@@ -215,7 +215,7 @@ func TestPostDoesNotRetryOn5xx(t *testing.T) {
 
 func TestTokenCachedAcrossCalls(t *testing.T) {
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"code":0,"payment":{"payment_id":"p","status":"succeeded"}}`))
+		_, _ = w.Write([]byte(`{"code":0,"payment":{"payment_id":"p","status":"succeeded"}}`))
 	})
 	ctx := context.Background()
 	for i := 0; i < 3; i++ {
@@ -232,7 +232,7 @@ func TestCreateRefundValidationAndPath(t *testing.T) {
 	var gotPath string
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`{"code":0,"refund":{"refund_id":"ref_1","payment_id":"pay_1","amount":"100.00","status":"initiated","date":1780309800000}}`))
+		_, _ = w.Write([]byte(`{"code":0,"refund":{"refund_id":"ref_1","payment_id":"pay_1","amount":"100.00","status":"initiated","date":1780309800000}}`))
 	})
 	ctx := context.Background()
 
@@ -258,7 +258,7 @@ func TestGetRefundPath(t *testing.T) {
 	var gotPath string
 	f := newFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
-		w.Write([]byte(`{"code":0,"refund":{"refund_id":"ref_9","status":"succeeded"}}`))
+		_, _ = w.Write([]byte(`{"code":0,"refund":{"refund_id":"ref_9","status":"succeeded"}}`))
 	})
 	if _, err := f.client.GetRefund(context.Background(), "ref_9"); err != nil {
 		t.Fatal(err)
