@@ -106,8 +106,5 @@ func resolveSigningKey(cfg config) string {
 	if cfg.signingKey != "" {
 		return cfg.signingKey
 	}
-	if v := os.Getenv("ZOHO_WEBHOOK_SECRET"); v != "" {
-		return v
-	}
-	return os.Getenv("ZOHO_SIGNING_KEY")
+	return os.Getenv("ZOHO_WEBHOOK_SIGNING_KEY")
 }

@@ -63,6 +63,7 @@ client, err := zoho.New(
     os.Getenv("ZOHO_CLIENT_ID"),
     os.Getenv("ZOHO_CLIENT_SECRET"),
     os.Getenv("ZOHO_REFRESH_TOKEN"),
+    zoho.WithSigningKey(os.Getenv("ZOHO_WEBHOOK_SIGNING_KEY")),
 )
 if err != nil {
     log.Fatal(err)
@@ -71,10 +72,13 @@ if err != nil {
 
 `New` fails fast if any credential is empty. Create **one client per process** and share it : it is goroutine-safe and caches the access token internally.
 
+Pass `WithSigningKey` at init time so the client can verify webhooks via `client.VerifyWebhook`. If `WithSigningKey` is omitted, the SDK falls back to the `ZOHO_WEBHOOK_SIGNING_KEY` environment variable.
+
 ### Options
 
 ```go
 zoho.New(acc, id, secret, refresh,
+    zoho.WithSigningKey("your-signing-key"),                    // webhook signature verification
     zoho.WithSandbox(),                                        // use sandbox environment (India only)
     zoho.WithRegion(zoho.RegionGlobal),                        // switch to payments.zoho.com
     zoho.WithHTTPClient(&http.Client{Timeout: 15 * time.Second}),
@@ -223,30 +227,24 @@ Configure the endpoint in Zoho Payments → Developer Space → Webhooks. Copy t
 ### Handler
 
 ```go
-func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        w.WriteHeader(http.StatusMethodNotAllowed)
-        return
-    }
+func zohoWebhookHandler(client *zoho.Client) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != http.MethodPost {
+            w.WriteHeader(http.StatusMethodNotAllowed)
+            return
+        }
 
-    signingKey := os.Getenv("ZOHO_WEBHOOK_SECRET")
-    if signingKey == "" {
-        http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
-        return
-    }
+        r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+        body, err := io.ReadAll(r.Body)
+        if err != nil {
+            http.Error(w, "Bad Request", http.StatusBadRequest)
+            return
+        }
 
-    r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-    body, err := io.ReadAll(r.Body)
-    if err != nil {
-        http.Error(w, "Bad Request", http.StatusBadRequest)
-        return
-    }
-
-    sig := r.Header.Get(zoho.SignatureHeader)
-    if !zoho.VerifySignatureWithTolerance(body, sig, signingKey, 5*time.Minute) {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
+        if err := client.VerifyWebhook(body, r.Header.Get(zoho.SignatureHeader)); err != nil {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
 
     ev, err := zoho.ParseEvent(body)
     if err != nil {
@@ -286,6 +284,7 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
         obj, _ := ev.RefundObject()
         // obj.Refund.RefundID, obj.Refund.Status
 
+    }
     }
 }
 ```
@@ -376,9 +375,8 @@ ZOHO_ACCOUNT_ID      : dashboard → Settings → Account Details
 ZOHO_CLIENT_ID       : api-console.zoho.in
 ZOHO_CLIENT_SECRET   : api-console.zoho.in
 ZOHO_REFRESH_TOKEN   : from the one-time OAuth flow above
-ZOHO_WEBHOOK_SECRET  : Developer Space → Webhooks → your endpoint → Signing Key (preferred name)
-ZOHO_SIGNING_KEY     : accepted as fallback if ZOHO_WEBHOOK_SECRET is not set
-ZOHO_SANDBOX         : set to "true" to use sandbox environment
+ZOHO_WEBHOOK_SIGNING_KEY  : Developer Space → Webhooks → your endpoint → Signing Key
+ZOHO_SANDBOX              : set to "true" to use sandbox environment
 ```
 
 Never commit credentials. Use environment variables or a secrets manager.
