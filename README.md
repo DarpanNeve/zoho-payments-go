@@ -14,11 +14,11 @@ Working in Node.js/TypeScript instead? Use the sibling SDK [zoho-payments-node](
 - **Fully tested** — `go test ./...` runs an offline test suite against a fake Zoho server
 
 ```
-go get github.com/DarpanNeve/zoho-payments-go
+go get github.com/darpanneve/zoho-payments-go
 ```
 
 ```go
-import zoho "github.com/DarpanNeve/zoho-payments-go"
+import zoho "github.com/darpanneve/zoho-payments-go"
 ```
 
 ---
