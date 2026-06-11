@@ -97,7 +97,7 @@ func WithMaxRetries(n int) Option {
 }
 
 // WithSigningKey sets the webhook signing key used by client.VerifyWebhook.
-// If not provided, the client reads ZOHO_SIGNING_KEY from the environment.
+// If not provided, resolveSigningKey reads ZOHO_WEBHOOK_SECRET then ZOHO_SIGNING_KEY.
 func WithSigningKey(key string) Option {
 	return func(c *config) { c.signingKey = key }
 }
@@ -106,7 +106,6 @@ func resolveSigningKey(cfg config) string {
 	if cfg.signingKey != "" {
 		return cfg.signingKey
 	}
-	// prefer ZOHO_WEBHOOK_SECRET (Zoho dashboard label); fall back to ZOHO_SIGNING_KEY
 	if v := os.Getenv("ZOHO_WEBHOOK_SECRET"); v != "" {
 		return v
 	}

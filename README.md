@@ -10,25 +10,6 @@ go get github.com/darpanneve/zoho-payments-go
 
 **Requires Go 1.22+**
 
----
-
-## Table of Contents
-
-- [Getting credentials](#getting-credentials)
-- [Client setup](#client-setup)
-- [Payment links](#payment-links)
-- [Payments](#payments)
-- [Refunds](#refunds)
-- [Webhooks](#webhooks)
-- [Error handling](#error-handling)
-- [Retry behavior](#retry-behavior)
-- [Helpers](#helpers)
-- [Environment variables](#environment-variables)
-- [Testing](#testing)
-- [Common mistakes](#common-mistakes)
-
----
-
 ## Getting credentials
 
 You need four values: **Account ID**, **Client ID**, **Client Secret**, and **Refresh Token**.
@@ -72,8 +53,6 @@ Save the `refresh_token`. The SDK handles all subsequent token refreshes — you
 
 **Sandbox** — email `support@zohopayments.com` with your Account ID to request sandbox access (~1 business day). Sandbox and production use **completely separate** OAuth apps, refresh tokens, signing keys, and account IDs.
 
----
-
 ## Client setup
 
 ```go
@@ -116,8 +95,6 @@ if os.Getenv("ZOHO_SANDBOX") == "true" {
 }
 client, err := zoho.New(accountID, clientID, clientSecret, refreshToken, opts...)
 ```
-
----
 
 ## Payment links
 
@@ -177,8 +154,6 @@ err := client.CancelPaymentLink(ctx, linkID)
 // empty linkID is a no-op — safe to call without checking
 ```
 
----
-
 ## Payments
 
 ### Get
@@ -216,8 +191,6 @@ payments, err = client.ListPayments(ctx, zoho.ListPaymentsParams{
 })
 ```
 
----
-
 ## Refunds
 
 `Reason` and `Type` are **required by the Zoho API**. The client validates them before making the request.
@@ -242,8 +215,6 @@ refund, err := client.GetRefund(ctx, refundID)
 ```
 
 Track completion via `refund.succeeded` / `refund.failed` webhooks, or poll `GetRefund`.
-
----
 
 ## Webhooks
 
@@ -271,8 +242,6 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Verify signature before doing anything else.
-    // 5-minute tolerance rejects replayed events.
     sig := r.Header.Get(zoho.SignatureHeader)
     if !zoho.VerifySignatureWithTolerance(body, sig, signingKey, 5*time.Minute) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -285,8 +254,6 @@ func zohoWebhookHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Acknowledge before processing.
-    // Zoho retries if it doesn't receive 200 quickly.
     w.WriteHeader(http.StatusOK)
     _, _ = w.Write([]byte("OK"))
     if f, ok := w.(http.Flusher); ok {
@@ -347,8 +314,6 @@ EventVirtualAccountPaid     EventVirtualAccountClosed
 EventPayoutInitiated        EventPayoutPaid             EventPayoutFailed
 ```
 
----
-
 ## Error handling
 
 ```go
@@ -373,9 +338,7 @@ if err != nil {
 }
 ```
 
-`*zoho.ValidationError` is returned for locally-detected problems (missing fields, invalid amounts) before any network call is made.
-
----
+`*zoho.ValidationError` is returned for locally-detected problems (missing fields, invalid amounts) before any network call. `*zoho.DecodeError` is returned when Zoho responds with an unexpected field encoding.
 
 ## Retry behavior
 
@@ -388,8 +351,6 @@ if err != nil {
 Token cache: access tokens are refreshed ~60 seconds before expiry. Concurrent goroutines share a single in-flight refresh (no stampede).
 
 Zoho's documented rate limits: 600 req/min for payments, 60 req/min for refunds.
-
----
 
 ## Helpers
 
@@ -408,8 +369,6 @@ amount.Float64()         // zoho.Amount → float64 (Zoho returns amounts as dec
 link.CreatedTime.Time    // zoho.Time embeds time.Time (Zoho returns timestamps as epoch ms)
 ```
 
----
-
 ## Environment variables
 
 ```
@@ -423,8 +382,6 @@ ZOHO_SANDBOX         — set to "true" to use sandbox environment
 ```
 
 Never commit credentials. Use environment variables or a secrets manager.
-
----
 
 ## Testing
 
@@ -452,8 +409,6 @@ client, _ := zoho.New("acc", "cid", "csecret", "rtoken",
 )
 ```
 
----
-
 ## Common mistakes
 
 | Mistake | Correct behavior |
@@ -469,8 +424,6 @@ client, _ := zoho.New("acc", "cid", "csecret", "rtoken",
 | Handling only one webhook event | Both `payment_link.paid` and `payment.succeeded` fire per payment. Make writes idempotent. |
 | Sharing sandbox and production credentials | Fully isolated environments — separate OAuth apps, tokens, signing keys, account IDs. |
 | Confirming payment from a screenshot | Always confirm via webhook (verified signature) or `GetPaymentLink` / `GetPayment`. |
-
----
 
 ## License
 

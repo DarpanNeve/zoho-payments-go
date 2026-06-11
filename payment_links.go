@@ -52,16 +52,16 @@ type CreatePaymentLinkRequest struct {
 
 func (r *CreatePaymentLinkRequest) validate() error {
 	if r.Amount <= 0 {
-		return errors.New("zoho: amount must be greater than zero")
+		return &ValidationError{Field: "amount", Message: "must be greater than zero"}
 	}
 	if strings.TrimSpace(r.Description) == "" {
-		return errors.New("zoho: description is required")
+		return &ValidationError{Field: "description", Message: "is required"}
 	}
 	if utf8.RuneCountInString(r.Description) > maxDescriptionRunes {
-		return fmt.Errorf("zoho: description exceeds %d characters", maxDescriptionRunes)
+		return &ValidationError{Field: "description", Message: fmt.Sprintf("exceeds %d characters", maxDescriptionRunes)}
 	}
 	if len(r.ReferenceID) > maxReferenceIDLen {
-		return fmt.Errorf("zoho: reference_id exceeds %d characters", maxReferenceIDLen)
+		return &ValidationError{Field: "reference_id", Message: fmt.Sprintf("exceeds %d characters", maxReferenceIDLen)}
 	}
 	return nil
 }

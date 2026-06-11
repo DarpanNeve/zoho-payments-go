@@ -7,7 +7,7 @@ import (
 
 var sanitizePattern = regexp.MustCompile(`[^a-zA-Z0-9\s.,\-()+]+`)
 
-// SanitizeText strips characters Zoho rejects in description/name fields.
+// SanitizeText strips characters Zoho rejects in description and name fields.
 func SanitizeText(s string) string {
 	return strings.TrimSpace(sanitizePattern.ReplaceAllString(s, ""))
 }

@@ -38,8 +38,18 @@ func (e *DecodeError) Error() string {
 	return fmt.Sprintf("zoho: cannot decode %s value %q", e.Field, e.Value)
 }
 
-// flexCode tolerates Zoho returning "code" as 0 (success), an int, or a
-// string like "error" depending on the failure path.
+type ValidationError struct {
+	Field   string
+	Message string
+}
+
+func (e *ValidationError) Error() string {
+	if e.Field != "" {
+		return fmt.Sprintf("zoho: validation error for %s: %s", e.Field, e.Message)
+	}
+	return fmt.Sprintf("zoho: validation error: %s", e.Message)
+}
+
 type flexCode struct {
 	num  int
 	text string

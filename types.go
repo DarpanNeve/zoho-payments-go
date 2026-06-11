@@ -6,8 +6,7 @@ import (
 	"time"
 )
 
-// Amount tolerates Zoho's mixed encoding: requests use JSON numbers,
-// responses return decimal strings ("100.50").
+// Amount handles Zoho's mixed encoding: requests send numbers, responses return decimal strings.
 type Amount float64
 
 func (a Amount) Float64() float64 { return float64(a) }
@@ -30,7 +29,7 @@ func (a Amount) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatFloat(float64(a), 'f', -1, 64)), nil
 }
 
-// Time tolerates epoch milliseconds (number or string) and RFC3339.
+// Time handles Zoho's epoch-millisecond timestamps.
 type Time struct {
 	time.Time
 }

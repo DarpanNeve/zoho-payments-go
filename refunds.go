@@ -36,13 +36,13 @@ type CreateRefundRequest struct {
 
 func (r *CreateRefundRequest) validate() error {
 	if r.Amount <= 0 {
-		return errors.New("zoho: refund amount must be greater than zero")
+		return &ValidationError{Field: "amount", Message: "must be greater than zero"}
 	}
 	if r.Reason == "" {
-		return errors.New("zoho: refund reason is required")
+		return &ValidationError{Field: "reason", Message: "is required"}
 	}
 	if r.Type == "" {
-		return errors.New("zoho: refund type is required")
+		return &ValidationError{Field: "type", Message: "is required"}
 	}
 	return nil
 }
