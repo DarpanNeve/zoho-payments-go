@@ -14,7 +14,13 @@ go get github.com/darpanneve/zoho-payments-go
 
 You need four values: **Account ID**, **Client ID**, **Client Secret**, and **Refresh Token**.
 
+**Use the setup tool** : **[zoho-payments-setup.vercel.app](https://zoho-payments-setup.vercel.app)**
+
+It builds the OAuth URL with the correct parameters, catches the redirect, and exchanges the code for your refresh token in one click. The output is a ready-to-paste env block. No database, no logging — your credentials stay in one browser tab.
+
 **Account ID** : Zoho Payments dashboard → Settings → Account Details.
+
+### Doing it manually
 
 **Client ID + Client Secret** : [api-console.zoho.in](https://api-console.zoho.in) → Create → **Server-based Application**. Do not use "Self Client" : it has no redirect URI and fails for Zoho Payments. Any redirect URI works for the one-time flow (e.g. `https://example.com/callback`).
 
